@@ -1,9 +1,11 @@
-// stackConfig.js
-// Try the direct subpath export
-import { StacksTestnet } from '@stacks/network/dist/index.js';
+// Network configuration for Stacks
 import { UserSession, AppConfig } from '@stacks/connect';
 
-export const network = new StacksTestnet();
+// Using testnet configuration
+export const network = {
+    coreApiUrl: 'https://api.testnet.hiro.so',
+    chainId: 0x80000000,
+};
 
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 export const userSession = new UserSession({ appConfig });
