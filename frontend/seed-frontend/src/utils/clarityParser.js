@@ -6,12 +6,19 @@
 export const parseUint = (clarityValue) => {
     if (!clarityValue) return 0;
 
+    // Handle standard CV object (UInt/Int)
+    if (clarityValue && typeof clarityValue === 'object') {
+        if ('value' in clarityValue) {
+            return Number(clarityValue.value);
+        }
+    }
+
     // Handle hex string format (0x...)
     if (typeof clarityValue === 'string' && clarityValue.startsWith('0x')) {
         return parseInt(clarityValue.slice(2), 16);
     }
 
-    // Handle object format with repr field
+    // Handle object format with repr field (legacy)
     if (clarityValue.repr) {
         return parseInt(clarityValue.repr.replace('u', ''));
     }
@@ -27,6 +34,19 @@ export const parsePrincipal = (clarityValue) => {
         return clarityValue;
     }
 
+    // Standard CV object (Principal)
+    if (clarityValue.value) {
+        // StandardPrincipal or ContractPrincipal
+        if (typeof clarityValue.value === 'string') return clarityValue.value;
+        // Sometimes it's address? check type
+        if (clarityValue.address && clarityValue.contractName) {
+            return `${clarityValue.address.hash160 || clarityValue.address}.${clarityValue.contractName.content || clarityValue.contractName}`;
+        }
+    }
+
+    // Fallback for simple object structure
+    if (clarityValue.address) return clarityValue.address;
+
     if (clarityValue.repr) {
         return clarityValue.repr;
     }
@@ -40,6 +60,11 @@ export const parseBool = (clarityValue) => {
 
     if (typeof clarityValue === 'boolean') {
         return clarityValue;
+    }
+
+    // Standard CV object
+    if (clarityValue && typeof clarityValue === 'object' && 'value' in clarityValue) {
+        return clarityValue.value === true;
     }
 
     if (clarityValue.repr) {

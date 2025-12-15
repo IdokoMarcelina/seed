@@ -13,6 +13,11 @@ export const useCampaigns = () => {
     const fetchCurrentBlock = useCallback(async () => {
         try {
             const response = await fetch(`${NETWORK_URL}/v2/info`);
+            if (!response.ok) {
+                // If rate limited or error, just log and return, don't crash
+                console.warn(`Fetch info failed: ${response.status}`);
+                return;
+            }
             const data = await response.json();
             setCurrentBlock(data.stacks_tip_height || 0);
         } catch (err) {

@@ -4,5 +4,14 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(),  tailwindcss(),],
-})
+  plugins: [react(), tailwindcss()],
+  server: {
+    proxy: {
+      '/v2': {
+        target: 'https://api.testnet.hiro.so',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
+});

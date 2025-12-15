@@ -4,7 +4,7 @@ const NETWORK_TYPE = 'testnet'; // Change to 'mainnet' for production
 // Network configuration object
 const networkConfig = {
     testnet: {
-        coreApiUrl: 'https://api.testnet.hiro.so',
+        coreApiUrl: '', // Use proxy in vite.config.js
         chainId: 0x80000000,
     },
     mainnet: {
