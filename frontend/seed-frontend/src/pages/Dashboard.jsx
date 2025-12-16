@@ -14,17 +14,42 @@ export default function Dashboard() {
     if (isConnected && userAddress && campaigns.length > 0) {
       // Filter campaigns owned by user
       const owned = campaigns.filter(c => c.owner === userAddress);
+      
+      // Sort owned campaigns: Active first, then by newest
+      owned.sort((a, b) => {
+        const aIsActive = currentBlock <= a.deadline && !a.finalized;
+        const bIsActive = currentBlock <= b.deadline && !b.finalized;
+        
+        if (aIsActive && !bIsActive) return -1;
+        if (!aIsActive && bIsActive) return 1;
+        if (a.finalized && !b.finalized) return 1;
+        if (!a.finalized && b.finalized) return -1;
+        return b.cid - a.cid; // Newest first
+      });
+      
       setUserCampaigns(owned);
 
-      // For funded campaigns, we'd need to check contributions
-      // For now, we'll show all campaigns the user doesn't own
+      // Filter campaigns user doesn't own
       const funded = campaigns.filter(c => c.owner !== userAddress);
+      
+      // Sort funded campaigns: Active first, then by newest
+      funded.sort((a, b) => {
+        const aIsActive = currentBlock <= a.deadline && !a.finalized;
+        const bIsActive = currentBlock <= b.deadline && !b.finalized;
+        
+        if (aIsActive && !bIsActive) return -1;
+        if (!aIsActive && bIsActive) return 1;
+        if (a.finalized && !b.finalized) return 1;
+        if (!a.finalized && b.finalized) return -1;
+        return b.cid - a.cid; // Newest first
+      });
+      
       setFundedCampaigns(funded);
     } else {
       setUserCampaigns([]);
       setFundedCampaigns([]);
     }
-  }, [isConnected, userAddress, campaigns]);
+  }, [isConnected, userAddress, campaigns, currentBlock]);
 
   if (!isConnected) {
     return (

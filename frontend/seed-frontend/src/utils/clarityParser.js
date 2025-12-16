@@ -62,9 +62,15 @@ export const parseBool = (clarityValue) => {
         return clarityValue;
     }
 
-    // Standard CV object
-    if (clarityValue && typeof clarityValue === 'object' && 'value' in clarityValue) {
-        return clarityValue.value === true;
+    // Handle type-based boolean (e.g., { type: 'true' } or { type: 'false' })
+    if (clarityValue && typeof clarityValue === 'object') {
+        if (clarityValue.type === 'true') return true;
+        if (clarityValue.type === 'false') return false;
+        
+        // Standard CV object with value property
+        if ('value' in clarityValue) {
+            return clarityValue.value === true;
+        }
     }
 
     if (clarityValue.repr) {
@@ -76,26 +82,44 @@ export const parseBool = (clarityValue) => {
 
 // Parse campaign tuple from contract response
 export const parseCampaign = (campaignData) => {
-    if (!campaignData || !campaignData.value) {
+    if (!campaignData) {
         return null;
     }
 
-    const data = campaignData.value;
-
-    // Handle different response formats
-    const getValue = (key) => {
-        if (data[key]) return data[key];
-        if (data.data && data.data[key]) return data.data[key];
+    // Handle optional/some type - campaign might be wrapped in (some {...})
+    let data = campaignData;
+    
+    // If it's a some type, unwrap it
+    if (campaignData.type === 'some' && campaignData.value) {
+        data = campaignData.value;
+    }
+    
+    // If it's a tuple type, get the value object
+    if (data.type === 'tuple' && data.value) {
+        data = data.value;
+    }
+    
+    // Now data should be the actual campaign fields
+    if (!data) {
         return null;
+    }
+
+    // Helper to safely get and parse field values
+    const getField = (key) => {
+        const field = data[key];
+        if (!field) return null;
+        
+        // If field has a value property, return it, otherwise return field itself
+        return field.value !== undefined ? field.value : field;
     };
 
     return {
-        owner: parsePrincipal(getValue('owner')),
-        goal: parseUint(getValue('goal')),
-        deadline: parseUint(getValue('deadline')),
-        raised: parseUint(getValue('raised')),
-        finalized: parseBool(getValue('finalized')),
-        tokenType: parseUint(getValue('token-type')),
+        owner: parsePrincipal(getField('owner')),
+        goal: parseUint(getField('goal')),
+        deadline: parseUint(getField('deadline')),
+        raised: parseUint(getField('raised')),
+        finalized: parseBool(getField('finalized')),
+        tokenType: parseUint(getField('token-type')),
     };
 };
 
